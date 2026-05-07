@@ -253,13 +253,15 @@ export default class Lilypad extends Extension {
             this._timerId = setTimeout(() => {
                 let detectActors = [];
                 detectActors.push(this._indicator);
-                detectActors.push(...this._containerService.getGroupedActors());
+                // Only check currently visible grouped actors, otherwise hidden
+                // actors can keep collapse blocked due to stale menu actors.
+                detectActors.push(...this._containerService.getGroupedActors().filter(actor => actor?.container?.visible));
 
                 let collapse = true;
 
                 for (let menu of Main.panel.menuManager._menus) {
                     for (let orderActor of detectActors) {
-                        if (((menu.actor?.hover || menu.actor?.is_visible()) && menu.sourceActor == orderActor)
+                        if (((menu.isOpen === true) && menu.sourceActor == orderActor)
                             || orderActor.hover) {
                             collapse = false;
                             break;
