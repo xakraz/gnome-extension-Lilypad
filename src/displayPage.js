@@ -1,20 +1,20 @@
 import Gio from 'gi://Gio';
-import Adw from "gi://Adw";
-import GObject from "gi://GObject";
-import Gtk from "gi://Gtk";
-import GLib from "gi://GLib";
+import Adw from 'gi://Adw';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
+import GLib from 'gi://GLib';
 
-import { HideExtension } from "./common/enum.js";
+import { HideExtension } from './common/enum.js';
 
 export default class DisplayPage extends Adw.PreferencesPage {
     static {
         GObject.registerClass({
-            GTypeName: "DisplayUI",
-            Template: GLib.uri_resolve_relative(import.meta.url, "../ui/display.ui", null),
+            GTypeName: 'DisplayUI',
+            Template: GLib.uri_resolve_relative(import.meta.url, '../ui/display.ui', null),
             InternalChildren: [
-                "hide-indicator-dropdown",
-                "auto-collapse-millisecond-spin-button",
-                "auto-collapse-switch",
+                'hide-indicator-dropdown',
+                'auto-collapse-millisecond-spin-button',
+                'auto-collapse-switch',
             ]
         }, this);
     }
@@ -36,11 +36,11 @@ export default class DisplayPage extends Adw.PreferencesPage {
             })
         );
         
-        this._settings.bind(keyname, this._hide_indicator_dropdown, "selected", Gio.SettingsBindFlags.DEFAULT)
+        this._settings.bind(keyname, this._hide_indicator_dropdown, 'selected', Gio.SettingsBindFlags.DEFAULT)
     }
 
     _initAutoCollapseMillisecondSwitchButton(keyName) {
-        this._settings.bind(keyName, this._auto_collapse_millisecond_spin_button, "value", Gio.SettingsBindFlags.DEFAULT);
+        this._settings.bind(keyName, this._auto_collapse_millisecond_spin_button, 'value', Gio.SettingsBindFlags.DEFAULT);
     }
 
     _initAutoCollapseSwitch(keyName) {
