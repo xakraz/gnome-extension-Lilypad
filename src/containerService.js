@@ -14,8 +14,8 @@ export default class ContainerService extends GObject.Object {
     _init(args) {
         super._init();
 
-        this._settings          = args["settings"] || null;
-        this._extensionPath     = args["path"] || null;
+        this._settings          = args['settings'] || null;
+        this._extensionPath     = args['path'] || null;
         this._containerName;
     }
 
@@ -122,7 +122,7 @@ export default class ContainerService extends GObject.Object {
                 const roleName = getRoleName(role);
 
                 if (settingsRole === roleName) {
-                    if (roleName === "lilypad") {
+                    if (roleName === 'lilypad') {
                         const numGroupedIcons = addGroupedIcons(ind);
                         ind += numGroupedIcons;
                     }
@@ -163,8 +163,8 @@ export default class ContainerService extends GObject.Object {
             let actorName = getRoleName(this._containerName.get(container));
 
             // conditions to exclude
-            if (actorName !== "lilypad" && !lilypadOrder.includes(actorName) && !actor.visible) continue;
-            if (actorName === "quickSettings" ||  ignoredOrder.includes(actorName)) continue;
+            if (actorName !== 'lilypad' && !lilypadOrder.includes(actorName) && !actor.visible) continue;
+            if (actorName === 'quickSettings' ||  ignoredOrder.includes(actorName)) continue;
 
             // accessible name could change, so push the raw role first
             roleOrder.push(this._containerName.get(container));
