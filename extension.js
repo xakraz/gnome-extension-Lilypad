@@ -19,7 +19,10 @@ import Gio from 'gi://Gio';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 
-import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
+import {
+    Extension,
+    gettext as _,
+} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Panel from 'resource:///org/gnome/shell/ui/panel.js';
@@ -27,10 +30,10 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import ContainerService from './src/containerService.js';
-import { HideExtension } from './src/common/enum.js';
+import { HideExtension, IconStyle } from './src/common/enum.js';
 
 import { PACKAGE_VERSION } from 'resource:///org/gnome/shell/misc/config.js';
-const [majorVer] = PACKAGE_VERSION.split('.').map(s => parseInt(s));
+const [majorVer] = PACKAGE_VERSION.split('.').map((s) => parseInt(s));
 
 export default class Lilypad extends Extension {
     constructor(metadata) {
@@ -42,26 +45,19 @@ export default class Lilypad extends Extension {
 
         this._impl = {
             useLegacyButtonSignals: majorVer < 50,
-        }
+        };
 
         // init reorder service
         this._containerService = new ContainerService({
             settings: this._settings,
             path: this.path,
         });
-        this._containerService.setIconVisibilityListeners(this._onIconVisibilityChange.bind(this));
+        this._containerService.setIconVisibilityListeners(
+            this._onIconVisibilityChange.bind(this),
+        );
 
         // create icons
-        this._closedIcon = new St.Icon({
-            gicon: Gio.icon_new_for_string(`${this.path}/icons/closed_icon.svg`),
-            style_class: 'system-status-icon',
-            icon_size: 16,
-        });
-        this._openIcon = new St.Icon({
-            gicon: Gio.icon_new_for_string(`${this.path}/icons/open_icon.svg`),
-            style_class: 'system-status-icon',
-            icon_size: 16,
-        });
+        this._loadIcons();
 
         // init indicator
         this._indicator = new PanelMenu.Button(0.5, _('Lilypad'), false);
@@ -70,13 +66,19 @@ export default class Lilypad extends Extension {
         this._max_collapse_retry_times = 5;
 
         //* modify default addContainer entrypoint
-        Panel.Panel.prototype._originalAddToStatusArea = Panel.Panel.prototype.addToStatusArea;
+        Panel.Panel.prototype._originalAddToStatusArea =
+      Panel.Panel.prototype.addToStatusArea;
         const rearrange = () => {
             // preserves extension scope
             this._containerService.arrange();
             this._updateIndicatorVisibility();
-        }
-        Panel.Panel.prototype.addToStatusArea = function (role, indicator, position, box) {
+        };
+        Panel.Panel.prototype.addToStatusArea = function (
+            role,
+            indicator,
+            position,
+            box,
+        ) {
             this._originalAddToStatusArea(role, indicator, position, box);
             let destroyID = indicator.connect('destroy', (emitter) => {
                 rearrange();
@@ -85,21 +87,31 @@ export default class Lilypad extends Extension {
             rearrange();
         };
 
-        // add signal handler for settings changes 
+        // add signal handler for settings changes
         this._signalHandler = [];
         this._signalHandler.push({
             object: this._settings,
-            id: this._settings.connect('changed::reorder', rearrange)
+            id: this._settings.connect('changed::reorder', rearrange),
             // AT MOST one signal handler for reorder to avoid race conditions
         });
         this._signalHandler.push({
             object: this._settings,
-            id: this._settings.connect('changed::hide-indicator', this._updateIndicatorVisibility.bind(this))
+            id: this._settings.connect(
+                'changed::hide-indicator',
+                this._updateIndicatorVisibility.bind(this),
+            ),
+        });
+        this._signalHandler.push({
+            object: this._settings,
+            id: this._settings.connect(
+                'changed::icon-style',
+                this._onIconStyleChanged.bind(this),
+            ),
         });
 
         // finalize indicator
         Main.panel.addToStatusArea(this.uuid, this._indicator);
-        console.log('Lilypad extension started...')
+        console.log('Lilypad extension started...');
     }
 
     _onIconVisibilityChange(actor, show, destroy = false) {
@@ -111,10 +123,47 @@ export default class Lilypad extends Extension {
         }
     }
 
-    disable() {
-        this._signalHandler.forEach(signal => signal.object.disconnect(signal.id));
+    _loadIcons() {
+        const iconStyle = this._settings.get_int('icon-style');
+        const suffix = iconStyle === IconStyle.ARROW.value ? '_arrow' : '';
 
-        Panel.Panel.prototype.addToStatusArea = Panel.Panel.prototype._originalAddToStatusArea;
+        this._closedIcon = new St.Icon({
+            gicon: Gio.icon_new_for_string(
+                `${this.path}/icons/closed_icon${suffix}.svg`,
+            ),
+            style_class: 'system-status-icon',
+            icon_size: 16,
+        });
+        this._openIcon = new St.Icon({
+            gicon: Gio.icon_new_for_string(
+                `${this.path}/icons/open_icon${suffix}.svg`,
+            ),
+            style_class: 'system-status-icon',
+            icon_size: 16,
+        });
+    }
+
+    _onIconStyleChanged() {
+        const isOpen = this._settings.get_boolean('show-icons');
+
+        // Destroy old icons
+        this._closedIcon?.destroy();
+        this._openIcon?.destroy();
+
+        // Reload icons with new style
+        this._loadIcons();
+
+        // Refresh the indicator display
+        this._setIcon(isOpen);
+    }
+
+    disable() {
+        this._signalHandler.forEach((signal) =>
+            signal.object.disconnect(signal.id),
+        );
+
+        Panel.Panel.prototype.addToStatusArea =
+      Panel.Panel.prototype._originalAddToStatusArea;
         Panel.Panel.prototype._originalAddToStatusArea = null;
 
         this._containerService?.destroy();
@@ -132,7 +181,7 @@ export default class Lilypad extends Extension {
         clearTimeout(this._timerId);
         this._timerId = null;
 
-        console.log('Lilypad extension stopped.')
+        console.log('Lilypad extension stopped.');
     }
 
     _initIndicator() {
@@ -142,14 +191,15 @@ export default class Lilypad extends Extension {
         settingsItem.connect('activate', () => this.openPreferences());
         this._indicator.menu.addMenuItem(settingsItem);
 
-        this._indicator.track_hover = true
+        this._indicator.track_hover = true;
 
         // set up click + touch handlers
         const _onClick = (event) => {
             switch (event.get_button()) {
             // do not show menu on left click
             case Clutter.BUTTON_PRIMARY:
-                if (!this._updateIndicatorVisibility())     // indicator is hidden
+                if (!this._updateIndicatorVisibility())
+                // indicator is hidden
                     break;
 
                 this._toggleIcons();
@@ -160,20 +210,23 @@ export default class Lilypad extends Extension {
                 break;
             }
             return Clutter.EVENT_PROPAGATE;
-        }
+        };
 
         if (!this._impl.useLegacyButtonSignals && this._indicator._clickGesture) {
-            this._indicator._clickGesture.connect('recognize', _onClick);   // touch should trigger click gesture
+            this._indicator._clickGesture.connect('recognize', _onClick); // touch should trigger click gesture
         } else {
-            this._indicator.connect('button-press-event', (actor, event) => _onClick(event));
-    
+            this._indicator.connect('button-press-event', (actor, event) =>
+                _onClick(event),
+            );
+
             this._indicator.connect('touch-event', (actor, event) => {
                 // only handle initial tap
                 switch (event.type()) {
                 case Clutter.EventType.TOUCH_BEGIN:
-                    if (!this._updateIndicatorVisibility())     // indicator is hidden
+                    if (!this._updateIndicatorVisibility())
+                    // indicator is hidden
                         break;
-    
+
                     this._toggleIcons();
                     this._toggleMenu();
                     break;
@@ -192,7 +245,7 @@ export default class Lilypad extends Extension {
 
     _toggleIcons() {
         if (this._settings.get_strv('lilypad-order').length === 0) {
-            this._setIcon(false);     // closed icon
+            this._setIcon(false); // closed icon
             return false;
         }
 
@@ -206,7 +259,7 @@ export default class Lilypad extends Extension {
     }
 
     _setIcon(isOpen) {
-        // remove existing icon
+    // remove existing icon
         if (this._indicator.get_children().length) {
             this._indicator.remove_all_children();
         }
@@ -249,20 +302,28 @@ export default class Lilypad extends Extension {
         let showIcons = this._settings.get_boolean('show-icons');
         if (showIcons && autoCollapse) {
             clearTimeout(this._timerId);
-            let autoCollapseMillisecond = this._settings.get_int('auto-collapse-millisecond') / this._max_collapse_retry_times;
+            let autoCollapseMillisecond =
+        this._settings.get_int('auto-collapse-millisecond') /
+        this._max_collapse_retry_times;
             this._timerId = setTimeout(() => {
                 let detectActors = [];
                 detectActors.push(this._indicator);
                 // Only check currently visible grouped actors, otherwise hidden
                 // actors can keep collapse blocked due to stale menu actors.
-                detectActors.push(...this._containerService.getGroupedActors().filter(actor => actor?.container?.visible));
+                detectActors.push(
+                    ...this._containerService
+                        .getGroupedActors()
+                        .filter((actor) => actor?.container?.visible),
+                );
 
                 let collapse = true;
 
                 for (let menu of Main.panel.menuManager._menus) {
                     for (let orderActor of detectActors) {
-                        if (((menu.isOpen === true) && menu.sourceActor == orderActor)
-                            || orderActor.hover) {
+                        if (
+                            (menu.isOpen === true && menu.sourceActor == orderActor) ||
+              orderActor.hover
+                        ) {
                             collapse = false;
                             break;
                         }
