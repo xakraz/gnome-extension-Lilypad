@@ -78,7 +78,7 @@ export default class Lilypad extends Extension {
         }
         Panel.Panel.prototype.addToStatusArea = function (role, indicator, position, box) {
             this._originalAddToStatusArea(role, indicator, position, box);
-            let destroyID = indicator.connect("destroy", (emitter) => {
+            let destroyID = indicator.connect('destroy', (emitter) => {
                 rearrange();
                 emitter.disconnect(destroyID);
             });
@@ -89,17 +89,17 @@ export default class Lilypad extends Extension {
         this._signalHandler = [];
         this._signalHandler.push({
             object: this._settings,
-            id: this._settings.connect("changed::reorder", rearrange)
+            id: this._settings.connect('changed::reorder', rearrange)
             // AT MOST one signal handler for reorder to avoid race conditions
         });
         this._signalHandler.push({
             object: this._settings,
-            id: this._settings.connect("changed::hide-indicator", this._updateIndicatorVisibility.bind(this))
+            id: this._settings.connect('changed::hide-indicator', this._updateIndicatorVisibility.bind(this))
         });
 
         // finalize indicator
         Main.panel.addToStatusArea(this.uuid, this._indicator);
-        console.log("Lilypad extension started...")
+        console.log('Lilypad extension started...')
     }
 
     _onIconVisibilityChange(actor, show, destroy = false) {
@@ -132,11 +132,11 @@ export default class Lilypad extends Extension {
         clearTimeout(this._timerId);
         this._timerId = null;
 
-        console.log("Lilypad extension stopped.")
+        console.log('Lilypad extension stopped.')
     }
 
     _initIndicator() {
-        this._setIcon(this._settings.get_boolean("show-icons"));
+        this._setIcon(this._settings.get_boolean('show-icons'));
 
         let settingsItem = new PopupMenu.PopupMenuItem(_('Settings'));
         settingsItem.connect('activate', () => this.openPreferences());
@@ -147,17 +147,17 @@ export default class Lilypad extends Extension {
         // set up click + touch handlers
         const _onClick = (event) => {
             switch (event.get_button()) {
-                // do not show menu on left click
-                case Clutter.BUTTON_PRIMARY:
-                    if (!this._updateIndicatorVisibility())     // indicator is hidden
-                        break;
+            // do not show menu on left click
+            case Clutter.BUTTON_PRIMARY:
+                if (!this._updateIndicatorVisibility())     // indicator is hidden
+                    break;
 
-                    this._toggleIcons();
-                    this._toggleMenu();
-                    break;
-                case Clutter.BUTTON_MIDDLE:
-                    this._toggleMenu();
-                    break;
+                this._toggleIcons();
+                this._toggleMenu();
+                break;
+            case Clutter.BUTTON_MIDDLE:
+                this._toggleMenu();
+                break;
             }
             return Clutter.EVENT_PROPAGATE;
         }
@@ -170,16 +170,16 @@ export default class Lilypad extends Extension {
             this._indicator.connect('touch-event', (actor, event) => {
                 // only handle initial tap
                 switch (event.type()) {
-                    case Clutter.EventType.TOUCH_BEGIN:
-                        if (!this._updateIndicatorVisibility())     // indicator is hidden
-                            break;
+                case Clutter.EventType.TOUCH_BEGIN:
+                    if (!this._updateIndicatorVisibility())     // indicator is hidden
+                        break;
     
-                        this._toggleIcons();
-                        this._toggleMenu();
-                        break;
-                    default:
-                        // ignore others, only touch_begin toggles gjs.button menu
-                        break;
+                    this._toggleIcons();
+                    this._toggleMenu();
+                    break;
+                default:
+                    // ignore others, only touch_begin toggles gjs.button menu
+                    break;
                 }
                 return Clutter.EVENT_PROPAGATE;
             });
@@ -191,7 +191,7 @@ export default class Lilypad extends Extension {
     }
 
     _toggleIcons() {
-        if (this._settings.get_strv("lilypad-order").length === 0) {
+        if (this._settings.get_strv('lilypad-order').length === 0) {
             this._setIcon(false);     // closed icon
             return false;
         }
@@ -219,7 +219,7 @@ export default class Lilypad extends Extension {
     }
 
     _updateIndicatorVisibility() {
-        const hide = this._settings.get_int("hide-indicator");
+        const hide = this._settings.get_int('hide-indicator');
 
         if (hide === HideExtension.NEVER.value) {
             this._indicator.show();

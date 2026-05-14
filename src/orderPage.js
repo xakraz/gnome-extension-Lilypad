@@ -1,20 +1,20 @@
-import Adw from "gi://Adw";
-import GObject from "gi://GObject";
-import Gdk from "gi://Gdk";
-import Gtk from "gi://Gtk";
-import GLib from "gi://GLib";
+import Adw from 'gi://Adw';
+import GObject from 'gi://GObject';
+import Gdk from 'gi://Gdk';
+import Gtk from 'gi://Gtk';
+import GLib from 'gi://GLib';
 
 
 export default class OrderPage extends Adw.PreferencesPage {
     static {
         GObject.registerClass({
-            GTypeName: "OrderUI",
-            Template: GLib.uri_resolve_relative(import.meta.url, "../ui/order.ui", null),
+            GTypeName: 'OrderUI',
+            Template: GLib.uri_resolve_relative(import.meta.url, '../ui/order.ui', null),
             InternalChildren: [
-                "rightbox-order",
-                "lilypad-order",
-                "ignored-order",
-                "clear-button",
+                'rightbox-order',
+                'lilypad-order',
+                'ignored-order',
+                'clear-button',
             ]
         }, this);
     }
@@ -28,10 +28,10 @@ export default class OrderPage extends Adw.PreferencesPage {
         this._lilypadList  = this._lilypad_order;
         this._ignoredList = this._ignored_order
 
-        this._initDragMenu("rightbox-order", this._rightBoxList);
-        this._initDragMenu("lilypad-order", this._lilypadList);
-        this._initDragMenu("ignored-order", this._ignoredList);
-        this._initClearButton("rightbox-order", "lilypad-order", "ignored-order");
+        this._initDragMenu('rightbox-order', this._rightBoxList);
+        this._initDragMenu('lilypad-order', this._lilypadList);
+        this._initDragMenu('ignored-order', this._ignoredList);
+        this._initClearButton('rightbox-order', 'lilypad-order', 'ignored-order');
     }
 
     /*
@@ -47,27 +47,27 @@ export default class OrderPage extends Adw.PreferencesPage {
             // drag icon
             row.add_prefix(
                 new Gtk.Image({
-                    icon_name: "list-drag-handle-symbolic",
-                    css_classes: ["dim-label"],
+                    icon_name: 'list-drag-handle-symbolic',
+                    css_classes: ['dim-label'],
                 }),
             );
 
             // delete button
             const deleteButton = new Gtk.Button({
-                icon_name: "user-trash-symbolic",
-                css_classes: ["flat"],
+                icon_name: 'user-trash-symbolic',
+                css_classes: ['flat'],
                 valign: Gtk.Align.CENTER,
-                tooltip_text: "Delete",
+                tooltip_text: 'Delete',
                 focusable: false,
             });
-            deleteButton.connect("clicked", () => {
+            deleteButton.connect('clicked', () => {
                 dragBox.remove(row);
                 if (dragBox === this._rightBoxList)
-                    this._storeOrder(dragBox, "rightbox-order");
+                    this._storeOrder(dragBox, 'rightbox-order');
                 else if (dragBox === this._lilypadList)
-                    this._storeOrder(dragBox, "lilypad-order");
+                    this._storeOrder(dragBox, 'lilypad-order');
                 else if (dragBox === this._ignoredList)
-                    this._storeOrder(dragBox, "ignored-order");
+                    this._storeOrder(dragBox, 'ignored-order');
                 this._emitReorder();
             });
             row.add_suffix(deleteButton);
@@ -81,7 +81,7 @@ export default class OrderPage extends Adw.PreferencesPage {
             });
             row.add_controller(dragSource);
 
-            dragSource.connect("prepare", (_source, x, y) => {
+            dragSource.connect('prepare', (_source, x, y) => {
                 dragX = x;
                 dragY = y;
 
@@ -92,17 +92,17 @@ export default class OrderPage extends Adw.PreferencesPage {
                 return Gdk.ContentProvider.new_for_value(value);
             });
 
-            dragSource.connect("drag-begin", (_source, drag) => {
+            dragSource.connect('drag-begin', (_source, drag) => {
                 const dragWidget = new Gtk.ListBox();
 
                 dragWidget.set_size_request(row.get_width(), row.get_height());
-                dragWidget.add_css_class("boxed-list");
+                dragWidget.add_css_class('boxed-list');
 
                 const dragRow = new Adw.ActionRow({ title: row.title });
                 dragRow.add_prefix(
                     new Gtk.Image({
-                        icon_name: "list-drag-handle-symbolic",
-                        css_classes: ["dim-label"],
+                        icon_name: 'list-drag-handle-symbolic',
+                        css_classes: ['dim-label'],
                     }),
                 );
 
@@ -117,8 +117,8 @@ export default class OrderPage extends Adw.PreferencesPage {
         }
 
         // Update row visuals during drag
-        dropController.connect("enter", () => dragBox.drag_highlight_row(row) );
-        dropController.connect("leave", () => dragBox.drag_unhighlight_row() );
+        dropController.connect('enter', () => dragBox.drag_highlight_row(row) );
+        dropController.connect('leave', () => dragBox.drag_unhighlight_row() );
         dragBox.insert(row, index);
     }
 
@@ -133,7 +133,7 @@ export default class OrderPage extends Adw.PreferencesPage {
         if (!orderSetting.length)
             this._addRow(listbox, null, -1);
 
-        boxTarget.connect("drop", (target, value, x, y) => this._onTargetDropped(target, value, x, y, listbox));
+        boxTarget.connect('drop', (target, value, x, y) => this._onTargetDropped(target, value, x, y, listbox));
     }
 
     _removeRow(oldRow, listbox) {
@@ -148,7 +148,7 @@ export default class OrderPage extends Adw.PreferencesPage {
     _storeOrder(listbox, orderSetting) {
         let order = [];
         for (const row of listbox) {
-            if (row.title == "")
+            if (row.title == '')
                 listbox.remove(row);
             else
                 order.push(row.title);
@@ -174,7 +174,7 @@ export default class OrderPage extends Adw.PreferencesPage {
             return false;
         }
 
-        if (value.title === "lilypad" && (listbox === this._lilypadList || listbox === this._ignoredList)) {
+        if (value.title === 'lilypad' && (listbox === this._lilypadList || listbox === this._ignoredList)) {
             return false;
         }
 
@@ -187,9 +187,9 @@ export default class OrderPage extends Adw.PreferencesPage {
         listbox.insert(value, targetIndex);
 
         // store order
-        this._storeOrder(this._rightBoxList, "rightbox-order");
-        this._storeOrder(this._lilypadList, "lilypad-order");
-        this._storeOrder(this._ignoredList, "ignored-order");
+        this._storeOrder(this._rightBoxList, 'rightbox-order');
+        this._storeOrder(this._lilypadList, 'lilypad-order');
+        this._storeOrder(this._ignoredList, 'ignored-order');
 
         // reorder indicators to reflect settings
         this._emitReorder();
@@ -198,7 +198,7 @@ export default class OrderPage extends Adw.PreferencesPage {
     }
 
     _initClearButton(...keynames) {
-        this._clear_button.connect("clicked", () => {
+        this._clear_button.connect('clicked', () => {
             const parentWindow = this.get_ancestor(Gtk.Window);
 
             const dialog = new Gtk.MessageDialog({
@@ -206,8 +206,8 @@ export default class OrderPage extends Adw.PreferencesPage {
                 modal: true,
                 buttons: Gtk.ButtonsType.YES_NO,
                 message_type: Gtk.MessageType.QUESTION,
-                text: "Are you sure you want to perform this action?",
-                secondary_text: "This action cannot be undone.",
+                text: 'Are you sure you want to perform this action?',
+                secondary_text: 'This action cannot be undone.',
             });
 
             dialog.connect('response', (dialog, response) => {
@@ -231,7 +231,7 @@ export default class OrderPage extends Adw.PreferencesPage {
     }
 
     _emitReorder() {
-        const reorder_state = this._settings.get_boolean("reorder");
-        this._settings.set_boolean("reorder", reorder_state^1);
+        const reorder_state = this._settings.get_boolean('reorder');
+        this._settings.set_boolean('reorder', reorder_state^1);
     }
 }
