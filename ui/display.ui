@@ -18,6 +18,18 @@
             </child>
           </object>
         </child>
+
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Icon style</property>
+            <property name="subtitle">Choose the indicator icon style</property>
+            <child type="suffix">
+              <object class="GtkDropDown" id="icon-style-dropdown">
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
 
