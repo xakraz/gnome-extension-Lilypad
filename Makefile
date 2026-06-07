@@ -21,21 +21,15 @@ publish: ## Build extension zip for publishing
 	rm -rf build
 	mkdir build
 	cp LICENSE ./build
+	cp README.md ./build
 	cp *.js ./build
 	cp metadata.json ./build
-	cp stylesheet.css ./build
-	cp -r ui ./build
-	cp -r preferences ./build
-	cp -r effects ./build
-	cp -r apps ./build
-	cp README.md ./build
-	cp CHANGELOG.md ./build
+	cp -R icons ./build
+	cp -R ui ./build
+	cp -R images ./build
+	cp -R src ./build
 	cp -R schemas ./build
-	rm -rf ./build/_*.js
-	rm -rf ./build/utils.js
-	rm -rf ./build/drawing.js
-	rm -rf ./build/chamfer.js
-	rm -rf ./build/imports_*
+	rm ./build/schemas/*.compiled
 	rm -rf ./*.zip
 	cd build ; \
 	zip -qr ../$(EXTENSION_ID).zip .
