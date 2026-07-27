@@ -15,6 +15,7 @@ export function getRoleName(role) {
     //* ignore wildcards from indicator IDs
     const regex = /((\d)*[A-Z]+(\d)*)+/gi;
     const keyWords = roleName.match(regex);
+    if (!keyWords) return roleName;
 
     const display = keyWords.join('_');
     return display;
