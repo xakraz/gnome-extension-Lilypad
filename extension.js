@@ -69,7 +69,8 @@ export default class Lilypad extends Extension {
         Panel.Panel.prototype._originalAddToStatusArea =
       Panel.Panel.prototype.addToStatusArea;
         const rearrange = () => {
-            // preserves extension scope
+            // Stale destroy signals from other indicators can call this after disable()
+            if (!this._containerService) return;
             this._containerService.arrange();
             this._updateIndicatorVisibility();
         };
@@ -158,15 +159,24 @@ export default class Lilypad extends Extension {
     }
 
     disable() {
+        // Stop auto-collapse timer first to prevent callbacks firing during teardown
+        clearTimeout(this._timerId);
+        this._timerId = null;
+
         this._signalHandler.forEach((signal) =>
             signal.object.disconnect(signal.id),
         );
+        this._signalHandler = [];
 
         Panel.Panel.prototype.addToStatusArea =
       Panel.Panel.prototype._originalAddToStatusArea;
         Panel.Panel.prototype._originalAddToStatusArea = null;
 
+        // Restore icon visibility before teardown
         this._containerService?.destroy();
+        // Null containerService before destroying indicator, because
+        // indicator.destroy() can trigger rearrange() via destroy signals
+        // on other indicators still connected from enable().
         this._containerService = null;
 
         this._indicator?.destroy();
@@ -178,8 +188,6 @@ export default class Lilypad extends Extension {
         this._openIcon = null;
 
         this._settings = null;
-        clearTimeout(this._timerId);
-        this._timerId = null;
 
         console.log('Lilypad extension stopped.');
     }
@@ -272,6 +280,8 @@ export default class Lilypad extends Extension {
     }
 
     _updateIndicatorVisibility() {
+        // Can be called via stale destroy signal callbacks after disable()
+        if (!this._settings || !this._containerService) return false;
         const hide = this._settings.get_int('hide-indicator');
 
         if (hide === HideExtension.NEVER.value) {
